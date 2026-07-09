@@ -40,4 +40,5 @@ export type GameState = {
   log: string[];
   hiddenCards: Card[];
   discardPile: Card[];
+  status: string;
 };

@@ -1,4 +1,3 @@
-import { characters } from "@/app/data/characters";
 import { PlayerData } from "@/app/types/game";
 import { IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
@@ -41,11 +40,7 @@ export default function Player({
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         {cards.map((card) => (
-          <RoleCard
-            key={card.id}
-            character={characters[card.characterId]}
-            size="small"
-          />
+          <RoleCard key={card.id} card={card} size="small" />
         ))}
       </div>
     </div>

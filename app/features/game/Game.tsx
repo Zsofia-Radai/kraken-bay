@@ -6,6 +6,8 @@ import { useState } from "react";
 import ActionHistory from "./ActionHistory";
 import ActivePlayer from "./ActivePlayer";
 import Player from "./Player";
+import ActionBar from "./ActionsBar";
+import { IconCards } from "@tabler/icons-react";
 
 export default function Game() {
   const [gameState, setGameState] = useState(createInitialGameState);
@@ -31,40 +33,32 @@ export default function Game() {
           ))}
         </section>
 
-        <section className="mt-8">
-          <ActivePlayer playerData={activePlayer} />
-        </section>
+        <div className="bg-teal-950/60 rounded-2xl p-4 border-cyan-400/30">
+          <section className="mt-4 border-cyan-400/30 bg-teal-950/60 p-4 rounded-2xl relative">
+            <div className="absolute top-60 left-1 text-cyan-200 text-center">
+              <IconCards size={35} />
+              <div>{gameState.deck.length}</div>
+            </div>
+            <ActivePlayer playerData={activePlayer} />
+          </section>
 
-        <section className="mt-5 rounded-2xl bg-rose-400/70 px-4 py-3 text-center shadow-lg shadow-rose-500/30">
-          <p className="text-xl font-bold">Sozerano attempts a STEAL.</p>
-        </section>
+          <section className="mt-5 rounded-2xl bg-cyan-600 px-4 py-3 text-center shadow-lg shadow-cyan-400/20">
+            <p className="text-xl font-bold">{gameState.status}</p>
+          </section>
 
-        <section className="mt-4 rounded-2xl border border-cyan-200/70 bg-cyan-950/60 p-3 shadow-lg shadow-cyan-400/20">
-          <ActionHistory />
-        </section>
+          <section className="mt-4 rounded-2xl border border-cyan-200/70 bg-cyan-950/60 p-3 shadow-lg shadow-cyan-400/20">
+            <ActionHistory log={gameState.log} />
+          </section>
 
-        <section className="mt-5 grid grid-cols-2 gap-4">
-          <button className="rounded-2xl bg-rose-600 py-3 text-lg font-bold shadow-lg shadow-rose-700/40">
-            Challenge
-          </button>
-          <button className="rounded-2xl bg-green-600 py-3 text-lg font-bold shadow-lg shadow-green-700/40">
-            Allow
-          </button>
-        </section>
-
-        <section className="mt-5 grid grid-cols-2 gap-3">
-          <BlockOption label="Block as Ambassador" />
-          <BlockOption label="Block as Captain" />
-        </section>
+          <section className="mt-5 flex justify-center">
+            <ActionBar
+              gameState={gameState}
+              setGameState={setGameState}
+              playerData={activePlayer}
+            />
+          </section>
+        </div>
       </div>
     </main>
-  );
-}
-
-function BlockOption({ label }: { label: string }) {
-  return (
-    <button className="rounded-2xl bg-cyan-500/80 p-4 text-sm font-bold uppercase shadow-lg shadow-cyan-500/20">
-      {label}
-    </button>
   );
 }

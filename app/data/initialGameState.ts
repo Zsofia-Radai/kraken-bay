@@ -75,7 +75,8 @@ export function createInitialGameState(): GameState {
     hiddenCards: [drawCard(deck), drawCard(deck)],
     deck,
     discardPile: [],
-    log: [],
+    log: ["Game started. Monkey's turn."],
+    status: "Take your action",
   };
 }
 
