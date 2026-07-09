@@ -38,7 +38,7 @@ export default function Player({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 flex justify-left gap-4">
         {cards.map((card) => (
           <RoleCard key={card.id} card={card} size="small" />
         ))}

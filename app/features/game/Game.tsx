@@ -25,20 +25,20 @@ export default function Game() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 flex items-center justify-center p-8">
-      <div className="w-full max-w-[720px] aspect-[9/16] rounded-[12px] overflow-hidden bg-gradient-to-b from-teal-950 via-slate-900 to-slate-950 shadow-2xl">
+    <main className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="w-full max-w-[900px] rounded-[12px] overflow-hidden bg-gradient-to-b from-teal-950 via-slate-900 to-slate-950 shadow-2xl">
         <section className="grid grid-cols-3 gap-3">
           {opponents.map((playerData: PlayerData) => (
             <Player playerData={playerData} key={playerData.profile.id} />
           ))}
         </section>
 
-        <div className="bg-teal-950/60 rounded-2xl p-4 border-cyan-400/30">
-          <section className="mt-4 border-cyan-400/30 bg-teal-950/60 p-4 rounded-2xl relative">
-            <div className="absolute top-60 left-1 text-cyan-200 text-center">
-              <IconCards size={35} />
-              <div>{gameState.deck.length}</div>
-            </div>
+        <div className="bg-teal-950/60 rounded-2xl p-4 border-cyan-400/30 relative">
+          <div className="absolute top-60 left-1 text-cyan-200 text-center">
+            <IconCards size={35} />
+            <div>{gameState.deck.length}</div>
+          </div>
+          <section className="ml-8 mr-8 border-cyan-400/30 bg-teal-950/60 p-4 rounded-2xl">
             <ActivePlayer playerData={activePlayer} />
           </section>
 

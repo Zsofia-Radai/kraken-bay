@@ -24,13 +24,13 @@ export default function ExchangeModal({
 
   return (
     <div className="w-full fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-w-3xl rounded-2xl border border-cyan-400/30 bg-slate-950 p-6 shadow-2xl">
+      <div className="max-w-3xl rounded-2xl border border-cyan-400/30 bg-slate-950 p-10 shadow-2xl">
         <header className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-cyan-100">Exchange Cards</h2>
           <p className="mt-2 text-sm text-slate-300">Choose 2 cards to keep.</p>
         </header>
 
-        <div className="grid grid-cols-2 gap-6 place-items-center">
+        <div className="grid grid-cols-2 gap-8 place-items-center">
           {cards.map((card) => {
             const isSelected = selectedCardIds.includes(card.id);
 
