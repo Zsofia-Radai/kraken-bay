@@ -1,4 +1,5 @@
 import { characters } from "@/app/data/characters";
+import { cn } from "@/app/lib/utils";
 import { Card } from "@/app/types/game";
 import Image from "next/image";
 
@@ -6,12 +7,16 @@ interface RoleCardProps {
   card: Card;
   size?: "small" | "medium" | "large";
   priority?: boolean;
+  isVisible?: boolean;
+  selected?: boolean;
 }
 
 export default function RoleCard({
   card,
   size = "large",
   priority,
+  isVisible,
+  selected,
 }: RoleCardProps) {
   const sizes = {
     small: "w-24 h-36",
@@ -20,20 +25,26 @@ export default function RoleCard({
   } as const;
 
   const character = characters[card.characterId];
+  const shouldShowFront = isVisible || card.revealed;
+
+  const imageSrc = shouldShowFront ? character.img : "/images/card-cover.png";
+  const imageAlt = shouldShowFront ? character.name : "Hidden card";
 
   return (
-    <article>
-      <div className={`relative overflow-hidden ${sizes[size]}`}>
-        <Image
-          src={character.img}
-          alt={character.name}
-          sizes={
-            size === "large" ? "290px" : size === "medium" ? "96px" : "72px"
-          }
-          fill
-          priority={priority}
-        />
-      </div>
-    </article>
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-md",
+        sizes[size],
+        selected && "ring-4 ring-red-600",
+      )}
+    >
+      <Image
+        src={imageSrc}
+        alt={imageAlt}
+        sizes={size === "large" ? "290px" : size === "medium" ? "96px" : "72px"}
+        fill
+        priority={priority}
+      />
+    </div>
   );
 }

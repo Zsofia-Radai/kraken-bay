@@ -49,13 +49,13 @@ export default function ExchangeModal({
                     : "border-cyan-200 hover:border-cyan-200",
                 ].join(" ")}
               >
-                <RoleCard card={card} size="medium" />
+                <RoleCard card={card} size="medium" isVisible={true} />
               </button>
             );
           })}
         </div>
 
-        <footer className="mt-6 flex justify-end gap-3">
+        <footer className="mt-8 flex justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}

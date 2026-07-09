@@ -3,7 +3,9 @@ import { Card, GameState, PlayerData } from "@/app/types/game";
 import { useState } from "react";
 import ActionButton from "./ActionButton";
 import ExchangeModal from "./ExchangeModal";
-import { exchange, income, tax } from "./GameLogic";
+import { assassinate, exchange, income, steal, tax } from "./GameLogic";
+import StealModal from "./StealModal";
+import AssassinateModal from "./AssassinateModal";
 
 export default function ActionBar({
   playerData: { cards, coins },
@@ -14,12 +16,16 @@ export default function ActionBar({
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
 }) {
-  const [isExchangeOpen, setIsExchangeOpen] = useState(false);
+  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
+  const [isStealModalOpen, setIsStealModalOpen] = useState(false);
+  const [isAssassinateModalOpen, setIsAssassinateModalOpen] = useState(false);
   const [drawnExchangeCards, setDrawnExchangeCards] = useState<Card[]>([]);
   const [exchangeCards, setExchangeCards] = useState<Card[]>([]);
+  const [targetPlayerId, setTargetPlayerId] = useState<string | null>(null);
   const [selectedExchangeCardIds, setSelectedExchangeCardIds] = useState<
     string[]
   >([]);
+
   const hasRequiredCharacter = (action: Action) => {
     if (!action.requiredCharacter) return true;
 
@@ -36,6 +42,13 @@ export default function ActionBar({
     setGameState(tax);
   };
 
+  const confirmSteal = () => {
+    if (!targetPlayerId) return;
+    setGameState((prev) => steal(prev, targetPlayerId));
+    setTargetPlayerId(null);
+    setIsStealModalOpen(false);
+  };
+
   const confirmExchange = () => {
     const selectedCards = exchangeCards.filter((card) =>
       selectedExchangeCardIds.includes(card.id),
@@ -43,7 +56,15 @@ export default function ActionBar({
 
     setGameState((prev) => exchange(prev, selectedCards, drawnExchangeCards));
 
-    setIsExchangeOpen(false);
+    setIsExchangeModalOpen(false);
+  };
+
+  const openStealModal = () => {
+    setIsStealModalOpen(true);
+  };
+
+  const openAssassinateModal = () => {
+    setIsAssassinateModalOpen(true);
   };
 
   const openExchangeModal = () => {
@@ -59,7 +80,7 @@ export default function ActionBar({
     setExchangeCards([...currentPlayer.cards, ...drawnCards]);
 
     setSelectedExchangeCardIds(currentPlayer.cards.map((card) => card.id));
-    setIsExchangeOpen(true);
+    setIsExchangeModalOpen(true);
   };
 
   const selectExhangeCard = (cardId: string) => {
@@ -80,6 +101,8 @@ export default function ActionBar({
     income: handleIncome,
     tax: handleTax,
     exchange: openExchangeModal,
+    steal: openStealModal,
+    assassinate: openAssassinateModal,
   };
 
   return (
@@ -103,12 +126,40 @@ export default function ActionBar({
       </div>
 
       <ExchangeModal
-        isOpen={isExchangeOpen}
+        isOpen={isExchangeModalOpen}
         cards={exchangeCards}
         selectedCardIds={selectedExchangeCardIds}
         selectExchangeCard={selectExhangeCard}
         onConfirm={() => confirmExchange()}
-        onCancel={() => setIsExchangeOpen(false)}
+        onCancel={() => setIsExchangeModalOpen(false)}
+      />
+
+      <StealModal
+        isOpen={isStealModalOpen}
+        players={gameState.players}
+        currentPlayerId={gameState.currentPlayerId}
+        selectTargetPlayer={(targetPlayerId) =>
+          setTargetPlayerId(targetPlayerId)
+        }
+        targetPlayerId={targetPlayerId}
+        onConfirm={() => confirmSteal()}
+        onCancel={() => {
+          setTargetPlayerId(null);
+          setIsStealModalOpen(false);
+        }}
+      />
+
+      <AssassinateModal
+        isOpen={isAssassinateModalOpen}
+        players={gameState.players}
+        currentPlayerId={gameState.currentPlayerId}
+        onConfirm={(targetCardId) => {
+          setGameState((prev) => assassinate(prev, targetCardId));
+          setIsAssassinateModalOpen(false);
+        }}
+        closeModal={() => {
+          setIsAssassinateModalOpen(false);
+        }}
       />
     </div>
   );

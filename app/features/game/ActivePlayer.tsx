@@ -33,11 +33,7 @@ export default function ActivePlayer({
         </div>
         <div className="mt-4 flex gap-6">
           {cards.map((card) => (
-            <RoleCard
-              key={card.id}
-              card={card}
-              size="large"
-            />
+            <RoleCard key={card.id} card={card} size="large" isVisible={true} />
           ))}
         </div>
       </div>

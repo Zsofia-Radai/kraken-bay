@@ -91,7 +91,7 @@ export const assassinate: Action = {
   id: "assassinate",
   label: "Assassinate",
   description:
-    "Pay 3 coins to assassinate another player by claiming Assassin.",
+    "Pay 3 coins to assassinate an influence of another player by claiming Assassin.",
   icon: IconSlice,
   canTarget: true,
   cost: 3,

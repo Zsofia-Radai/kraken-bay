@@ -40,12 +40,70 @@ export function exchange(
   };
 }
 
+export function steal(state: GameState, selectedPlayerId: string): GameState {
+  const target = state.players.find(
+    (player) => player.profile.id === selectedPlayerId,
+  );
+
+  if (!target) {
+    throw new Error("Selected player not found");
+  }
+
+  const amount = Math.min(target.coins, 2);
+
+  let newState = state;
+  newState = addCoinsToCurrentPlayer(newState, amount);
+  newState = removeCoinsFromPlayer(newState, selectedPlayerId, amount);
+
+  return newState;
+}
+
+export function assassinate(state: GameState, targetCardId: string): GameState {
+  return {
+    ...state,
+    players: state.players.map((player) => {
+      const hasTargetCard = player.cards.some(
+        (card) => card.id === targetCardId,
+      );
+
+      if (!hasTargetCard) {
+        return player;
+      }
+
+      const updatedCards = player.cards.map((card) =>
+        card.id === targetCardId ? { ...card, revealed: true } : card,
+      );
+
+      return {
+        ...player,
+        cards: updatedCards,
+        isAlive: updatedCards.some((card) => !card.revealed),
+      };
+    }),
+  };
+}
+
 function addCoinsToCurrentPlayer(state: GameState, amount: number): GameState {
   return {
     ...state,
     players: state.players.map((player: PlayerData) =>
       player.profile.id === state.currentPlayerId
         ? { ...player, coins: player.coins + amount }
+        : player,
+    ),
+  };
+}
+
+function removeCoinsFromPlayer(
+  state: GameState,
+  playerId: string,
+  amount: number,
+): GameState {
+  return {
+    ...state,
+    players: state.players.map((player: PlayerData) =>
+      player.profile.id === playerId
+        ? { ...player, coins: player.coins - amount }
         : player,
     ),
   };
