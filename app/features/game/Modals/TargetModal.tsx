@@ -1,9 +1,15 @@
 import { cn } from "@/app/lib/utils";
 import { PlayerData } from "@/app/types/game";
-import { IconSkull, IconTarget, IconWallet } from "@tabler/icons-react";
+import { Icon, IconSkull, IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
-import RoleCard from "./RoleCard";
+import RoleCard from "../RoleCard";
+
+type ModalSettings = {
+  title: string;
+  description: string;
+  icon: Icon;
+};
 
 type AssassinateModalProps = {
   onConfirm: (targetCardId: string) => void;
@@ -11,19 +17,22 @@ type AssassinateModalProps = {
   players: PlayerData[];
   currentPlayerId: string;
   closeModal: () => void;
+  settings: ModalSettings;
 };
 
-export default function AssassinateModal({
+export default function TargetModal({
   onConfirm,
   isOpen,
   players,
   currentPlayerId,
   closeModal,
+  settings,
 }: AssassinateModalProps) {
   const [targetCardId, setTargetCardId] = useState<string | null>(null);
   const opponents = players.filter(
     (player) => player.profile.id !== currentPlayerId,
   );
+  const Icon = settings.icon;
 
   if (!isOpen) return null;
 
@@ -31,12 +40,8 @@ export default function AssassinateModal({
     <div className="w-full fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="max-w-3xl rounded-2xl border border-cyan-400/30 bg-slate-950 p-6 shadow-2xl">
         <header className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-cyan-100">
-            Assassinate an influence
-          </h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Choose a card to reveal.
-          </p>
+          <h2 className="text-2xl font-bold text-cyan-100">{settings.title}</h2>
+          <p className="mt-2 text-sm text-slate-300">{settings.description}</p>
         </header>
 
         <div className="flex gap-6">
@@ -109,7 +114,7 @@ export default function AssassinateModal({
                           {isRevealed ? (
                             <IconSkull className="h-10 w-10 text-white drop-shadow-lg" />
                           ) : (
-                            <IconTarget className="h-10 w-10 text-red-600 drop-shadow-lg" />
+                            <Icon className="h-10 w-10 text-red-600 drop-shadow-lg" />
                           )}
 
                           {isRevealed && (
@@ -144,9 +149,12 @@ export default function AssassinateModal({
               onConfirm(targetCardId);
               setTargetCardId(null);
             }}
-            className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer hover:bg-cyan-600"
+            className="
+              rounded-lg bg-cyan-500 px-4 py-2 
+              font-bold text-slate-950 disabled:cursor-not-allowed 
+              disabled:opacity-40 cursor-pointer hover:bg-cyan-600"
           >
-            Confirm Kill
+            Confirm
           </button>
         </footer>
       </div>

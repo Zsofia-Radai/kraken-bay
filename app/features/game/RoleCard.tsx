@@ -33,7 +33,7 @@ export default function RoleCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-md",
+        "relative overflow-hidden",
         sizes[size],
         selected && "ring-4 ring-red-600",
       )}

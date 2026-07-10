@@ -1,5 +1,5 @@
 import { Card } from "@/app/types/game";
-import RoleCard from "./RoleCard";
+import RoleCard from "../RoleCard";
 
 type ExchangeModalProps = {
   isOpen: boolean;

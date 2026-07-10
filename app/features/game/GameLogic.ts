@@ -1,4 +1,8 @@
+import { shuffle } from "@/app/data/initialGameState";
 import { Card, GameState, PlayerData } from "@/app/types/game";
+
+const ASSASSINATION_PRICE = 3;
+const WALK_tHE_PLANK_PRICE = 7;
 
 export function income(state: GameState): GameState {
   return addCoinsToCurrentPlayer(state, 1);
@@ -26,6 +30,11 @@ export function exchange(
     (card) => !selectedCardIds.includes(card.id),
   );
 
+  const newDeck = [
+    ...state.deck.filter((card) => !drawnCardIds.includes(card.id)),
+    ...returnedCards,
+  ];
+
   return {
     ...state,
     players: state.players.map((player) =>
@@ -33,10 +42,7 @@ export function exchange(
         ? { ...player, cards: selectedCards }
         : player,
     ),
-    deck: [
-      ...state.deck.filter((card) => !drawnCardIds.includes(card.id)),
-      ...returnedCards,
-    ],
+    deck: shuffle(newDeck),
   };
 }
 
@@ -59,15 +65,29 @@ export function steal(state: GameState, selectedPlayerId: string): GameState {
 }
 
 export function assassinate(state: GameState, targetCardId: string): GameState {
+  return revealInfluence(state, targetCardId, ASSASSINATION_PRICE);
+}
+
+export function walkThePlank(
+  state: GameState,
+  targetCardId: string,
+): GameState {
+  return revealInfluence(state, targetCardId, WALK_tHE_PLANK_PRICE);
+}
+
+function revealInfluence(
+  state: GameState,
+  targetCardId: string,
+  price: number,
+): GameState {
   return {
     ...state,
     players: state.players.map((player) => {
-      const hasTargetCard = player.cards.some(
-        (card) => card.id === targetCardId,
-      );
-
-      if (!hasTargetCard) {
-        return player;
+      if (player.profile.id === state.currentPlayerId) {
+        return {
+          ...player,
+          coins: Math.max(0, player.coins - price),
+        };
       }
 
       const updatedCards = player.cards.map((card) =>

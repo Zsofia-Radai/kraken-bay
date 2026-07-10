@@ -3,10 +3,10 @@
 import { createInitialGameState } from "@/app/data/initialGameState";
 import { PlayerData } from "@/app/types/game";
 import { useState } from "react";
-import ActionHistory from "./ActionHistory";
-import ActivePlayer from "./ActivePlayer";
-import Player from "./Player";
-import ActionBar from "./ActionsBar";
+import ActionHistory from "./Actions/ActionHistory";
+import ActivePlayer from "./Players/ActivePlayer";
+import Player from "./Players/Player";
+import ActionBar from "./Actions/ActionsBar";
 import { IconCards } from "@tabler/icons-react";
 
 export default function Game() {

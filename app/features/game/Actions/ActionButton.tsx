@@ -26,7 +26,7 @@ export default function ActionButton({
       className={cn(
         "relative",
         "rounded-2xl p-4 transition place-items-center rounded-2xl text-cyan-200",
-        "hover:-translate-y-0.5",
+        "enabled:hover:-translate-y-0.5",
         "transition-all duration-150",
         "cursor-pointer",
         "disabled:cursor-not-allowed",

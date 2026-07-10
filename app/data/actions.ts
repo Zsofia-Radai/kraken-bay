@@ -114,7 +114,7 @@ export const trade: Action = {
   canTarget: false,
 };
 
-export const walkThePlank: Action = {
+export const walkThePlankAction: Action = {
   id: "walk-the-plank",
   label: "Walk the Plank",
   description: "Pay 7 coins to force another player to discard a card.",

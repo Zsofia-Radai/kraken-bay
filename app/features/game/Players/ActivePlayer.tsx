@@ -1,7 +1,7 @@
 import { PlayerData } from "@/app/types/game";
 import { IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
-import RoleCard from "./RoleCard";
+import RoleCard from "../RoleCard";
 
 export default function ActivePlayer({
   playerData: { profile: player, coins, cards, isAlive },
@@ -12,9 +12,6 @@ export default function ActivePlayer({
     <div className="flex justify-center">
       <div className="inline-flex flex-col">
         <div className="flex items-center gap-4 bg-teal-800/70 rounded-xl p-2">
-          <p className="text-xl uppercase font-semibold text-cyan-100">
-            Turn:{" "}
-          </p>
           <div className="h-15 w-15 relative rounded-full border-4 border-yellow-400 bg-slate-200">
             <Image
               src={player.avatar}

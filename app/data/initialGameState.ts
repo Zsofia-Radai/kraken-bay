@@ -29,7 +29,7 @@ const createDeck = (): Card[] => [
   createCard("guardian"),
 ];
 
-function shuffle<T>(array: T[]): T[] {
+export function shuffle<T>(array: T[]): T[] {
   const result = [...array];
 
   for (let i = result.length - 1; i > 0; i--) {

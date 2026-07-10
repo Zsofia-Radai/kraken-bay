@@ -1,11 +1,24 @@
-import { Action, ActionId, Actions, walkThePlank } from "@/app/data/actions";
+import {
+  Action,
+  ActionId,
+  Actions,
+  walkThePlankAction,
+} from "@/app/data/actions";
 import { Card, GameState, PlayerData } from "@/app/types/game";
 import { useState } from "react";
 import ActionButton from "./ActionButton";
-import ExchangeModal from "./ExchangeModal";
-import { assassinate, exchange, income, steal, tax } from "./GameLogic";
-import StealModal from "./StealModal";
-import AssassinateModal from "./AssassinateModal";
+import ExchangeModal from "../Modals/ExchangeModal";
+import {
+  assassinate,
+  exchange,
+  income,
+  steal,
+  tax,
+  walkThePlank,
+} from "../GameLogic";
+import StealModal from "../Modals/StealModal";
+import AssassinateModal from "../Modals/AssassinateModal";
+import WalkThePlankModal from "../Modals/WalkThePlankModal";
 
 export default function ActionBar({
   playerData: { cards, coins },
@@ -19,6 +32,7 @@ export default function ActionBar({
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
   const [isStealModalOpen, setIsStealModalOpen] = useState(false);
   const [isAssassinateModalOpen, setIsAssassinateModalOpen] = useState(false);
+  const [isWalkThePlankModalOpen, setIsWalkThePlankModalOpen] = useState(false);
   const [drawnExchangeCards, setDrawnExchangeCards] = useState<Card[]>([]);
   const [exchangeCards, setExchangeCards] = useState<Card[]>([]);
   const [targetPlayerId, setTargetPlayerId] = useState<string | null>(null);
@@ -108,7 +122,11 @@ export default function ActionBar({
   return (
     <div>
       <div className="mb-4 flex justify-center">
-        <ActionButton action={walkThePlank} disabled={coins < 7} />
+        <ActionButton
+          onClick={() => setIsWalkThePlankModalOpen(true)}
+          action={walkThePlankAction}
+          disabled={coins < 7}
+        />
       </div>
 
       <div className="flex items-center gap-1 text-center">
@@ -117,6 +135,7 @@ export default function ActionBar({
             <ActionButton
               key={action.id}
               action={action}
+              disabled={action === Actions.Assassinate && coins < 3}
               onClick={actionHandlers[action.id]}
               variant="secondary"
               isBluff={!hasRequiredCharacter(action)}
@@ -159,6 +178,19 @@ export default function ActionBar({
         }}
         closeModal={() => {
           setIsAssassinateModalOpen(false);
+        }}
+      />
+
+      <WalkThePlankModal
+        isOpen={isWalkThePlankModalOpen}
+        players={gameState.players}
+        currentPlayerId={gameState.currentPlayerId}
+        onConfirm={(targetCardId) => {
+          setGameState((prev) => walkThePlank(prev, targetCardId));
+          setIsWalkThePlankModalOpen(false);
+        }}
+        closeModal={() => {
+          setIsWalkThePlankModalOpen(false);
         }}
       />
     </div>

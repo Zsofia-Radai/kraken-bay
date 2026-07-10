@@ -1,11 +1,10 @@
 import { PlayerData } from "@/app/types/game";
 import { IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
-import RoleCard from "./RoleCard";
+import RoleCard from "../RoleCard";
 
 export default function Player({
   playerData: { profile: player, coins, cards, isAlive },
-  active,
 }: {
   playerData: PlayerData;
   active?: boolean;
@@ -13,7 +12,7 @@ export default function Player({
   return (
     <div
       className={`rounded-2xl border p-4 ${
-        active
+        isAlive
           ? "border-yellow-300 bg-teal-800/70"
           : "border-cyan-400/30 bg-teal-950/60"
       }`}
@@ -25,7 +24,7 @@ export default function Player({
             alt={player.name}
             fill
             sizes="80px"
-            className="object-cover"
+            className="cover"
           />
         </div>
 
