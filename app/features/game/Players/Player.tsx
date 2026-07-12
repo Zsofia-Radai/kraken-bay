@@ -2,20 +2,26 @@ import { PlayerData } from "@/app/types/game";
 import { IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
 import RoleCard from "../RoleCard";
+import { cn } from "@/app/lib/utils";
 
 export default function Player({
   playerData: { profile: player, coins, cards, isAlive },
+  currentPlayerId,
 }: {
   playerData: PlayerData;
   active?: boolean;
+  currentPlayerId: string;
 }) {
+  const activePlayer = currentPlayerId === player.id;
+
   return (
     <div
-      className={`rounded-2xl border p-4 ${
-        isAlive
+      className={cn(
+        "rounded-2xl border p-4 shadow-lg",
+        activePlayer
           ? "border-yellow-300 bg-teal-800/70"
-          : "border-cyan-400/30 bg-teal-950/60"
-      }`}
+          : "border-cyan-400/30 bg-teal-900/60",
+      )}
     >
       <div className="flex items-center gap-4">
         <div className="h-20 w-20 relative rounded-full border-4 border-yellow-400 bg-slate-200">

@@ -19,6 +19,8 @@ import {
 import StealModal from "../Modals/StealModal";
 import AssassinateModal from "../Modals/AssassinateModal";
 import WalkThePlankModal from "../Modals/WalkThePlankModal";
+import { playSound, sounds } from "@/app/lib/sounds";
+import { motion } from "motion/react";
 
 export default function ActionBar({
   playerData: { cards, coins },
@@ -53,6 +55,7 @@ export default function ActionBar({
   };
 
   const handleTax = () => {
+    playSound(sounds.coin);
     setGameState(tax);
   };
 
@@ -187,6 +190,7 @@ export default function ActionBar({
         currentPlayerId={gameState.currentPlayerId}
         onConfirm={(targetCardId) => {
           setGameState((prev) => walkThePlank(prev, targetCardId));
+          playSound(sounds.flip);
           setIsWalkThePlankModalOpen(false);
         }}
         closeModal={() => {

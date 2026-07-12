@@ -19,7 +19,7 @@ export default function RoleCard({
   selected,
 }: RoleCardProps) {
   const sizes = {
-    small: "w-24 h-36",
+    small: "w-24 h-32",
     medium: "w-60 h-85",
     large: "w-[290px] h-[420px]",
   } as const;
