@@ -1,18 +1,30 @@
-import { PlayerData } from "@/app/types/game";
+import { cn } from "@/app/lib/utils";
+import { PendingAction, PlayerData } from "@/app/types/game";
 import { IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
+import ChallengeTimer from "../Actions/ChallengeTimer";
+import ReactionsBar from "../Actions/ReactionsBar";
 import RoleCard from "../RoleCard";
-import { cn } from "@/app/lib/utils";
 
-export default function Player({
-  playerData: { profile: player, coins, cards, isAlive },
-  currentPlayerId,
-}: {
+type PlayerProps = {
   playerData: PlayerData;
   active?: boolean;
   currentPlayerId: string;
-}) {
+  pendingAction?: PendingAction | null;
+  responderPlayerId?: string;
+  allowAction: () => void;
+};
+
+export default function Player({
+  playerData: { profile: player, coins, cards },
+  currentPlayerId,
+  pendingAction,
+  responderPlayerId,
+  allowAction,
+}: PlayerProps) {
   const activePlayer = currentPlayerId === player.id;
+  const isResponderPlayer =
+    (pendingAction?.targetPlayerId ?? responderPlayerId) === player.id;
 
   return (
     <div
@@ -48,6 +60,16 @@ export default function Player({
           <RoleCard key={card.id} card={card} size="small" />
         ))}
       </div>
+
+      {!activePlayer && pendingAction?.phase === "awaiting" && (
+        <>
+          <ReactionsBar
+            isResponderPlayer={isResponderPlayer}
+            onAllow={allowAction}
+          />
+          <ChallengeTimer key={pendingAction.id} onTimeout={allowAction} />
+        </>
+      )}
     </div>
   );
 }

@@ -77,6 +77,8 @@ export function createInitialGameState(): GameState {
     discardPile: [],
     log: ["Game started. Monkey's turn."],
     status: "Take your action",
+    pendingAction: null,
+    actionHistory: [],
   };
 }
 

@@ -1,9 +1,9 @@
-import { Action } from "@/app/data/actions";
+import { Action, WalkThePlankAction } from "@/app/data/actions";
 import { IconAlertHexagon } from "@tabler/icons-react";
 import { cn } from "@/app/lib/utils";
 
 type ActionButtonProps = {
-  action: Action;
+  action: Action | WalkThePlankAction;
   variant?: "primary" | "secondary";
   onClick?: () => void;
   disabled?: boolean;

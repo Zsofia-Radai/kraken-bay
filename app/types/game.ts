@@ -1,3 +1,5 @@
+import { ActionId } from "../data/actions";
+
 export type CharacterId =
   | "governor"
   | "assassin"
@@ -33,6 +35,22 @@ export type PlayerData = {
   isAlive: boolean;
 };
 
+export type PendingAction = {
+  id: string;
+  actionId: ActionId;
+  playerId: string;
+  targetPlayerId?: string;
+  responderPlayerId?: string;
+  phase: "awaiting" | "blocked" | "challenged" | "allowed";
+};
+
+export type ActionHistoryEntry = {
+  id: string;
+  playerId: string;
+  actionId: ActionId;
+  targetPlayerId?: string;
+};
+
 export type GameState = {
   players: PlayerData[];
   deck: Card[];
@@ -41,4 +59,6 @@ export type GameState = {
   hiddenCards: Card[];
   discardPile: Card[];
   status: string;
+  pendingAction: PendingAction | null;
+  actionHistory: ActionHistoryEntry[];
 };

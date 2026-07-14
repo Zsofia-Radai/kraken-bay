@@ -1,13 +1,12 @@
 import {
   Action,
   ActionId,
-  Actions,
+  actions,
   walkThePlankAction,
 } from "@/app/data/actions";
+import { playSound, sounds } from "@/app/lib/sounds";
 import { Card, GameState, PlayerData } from "@/app/types/game";
-import { useState } from "react";
-import ActionButton from "./ActionButton";
-import ExchangeModal from "../Modals/ExchangeModal";
+import { useEffect, useState } from "react";
 import {
   assassinate,
   exchange,
@@ -16,11 +15,13 @@ import {
   tax,
   walkThePlank,
 } from "../GameLogic";
-import StealModal from "../Modals/StealModal";
 import AssassinateModal from "../Modals/AssassinateModal";
+import ExchangeModal from "../Modals/ExchangeModal";
+import StealModal from "../Modals/StealModal";
 import WalkThePlankModal from "../Modals/WalkThePlankModal";
-import { playSound, sounds } from "@/app/lib/sounds";
-import { motion } from "motion/react";
+import ActionButton from "./ActionButton";
+import ConfirmationModal from "../Modals/ConfirmationModal";
+import { getNextAlivePlayerId } from "@/app/lib/actionUtils";
 
 export default function ActionBar({
   playerData: { cards, coins },
@@ -35,6 +36,8 @@ export default function ActionBar({
   const [isStealModalOpen, setIsStealModalOpen] = useState(false);
   const [isAssassinateModalOpen, setIsAssassinateModalOpen] = useState(false);
   const [isWalkThePlankModalOpen, setIsWalkThePlankModalOpen] = useState(false);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [drawnExchangeCards, setDrawnExchangeCards] = useState<Card[]>([]);
   const [exchangeCards, setExchangeCards] = useState<Card[]>([]);
   const [targetPlayerId, setTargetPlayerId] = useState<string | null>(null);
@@ -114,6 +117,33 @@ export default function ActionBar({
     });
   };
 
+  const openConfirmationModal = () => {
+    setIsConfirmationModalOpen(true);
+  };
+
+  const confirmAction = () => {
+    if (!selectedAction) return;
+
+    setGameState((prev) => ({
+      ...prev,
+      pendingAction: {
+        id: crypto.randomUUID(),
+        actionId: selectedAction.id,
+        playerId: prev.currentPlayerId,
+        targetPlayerId: targetPlayerId ?? undefined,
+        responderPlayerId: getNextAlivePlayerId(
+          prev.players,
+          prev.currentPlayerId,
+        ),
+        phase: "awaiting",
+      },
+    }));
+
+    setIsConfirmationModalOpen(false);
+    setSelectedAction(null);
+    setTargetPlayerId(null);
+  };
+
   const actionHandlers: Partial<Record<ActionId, () => void>> = {
     income: handleIncome,
     tax: handleTax,
@@ -133,13 +163,20 @@ export default function ActionBar({
       </div>
 
       <div className="flex items-center gap-1 text-center">
-        {Object.values(Actions).map((action) => {
+        {Object.values(actions).map((action) => {
           return (
             <ActionButton
               key={action.id}
               action={action}
-              disabled={action === Actions.Assassinate && coins < 3}
-              onClick={actionHandlers[action.id]}
+              disabled={action === actions.assassinate && coins < 3}
+              onClick={() => {
+                if (action.id === "income") {
+                  handleIncome();
+                } else {
+                  setSelectedAction(action);
+                  openConfirmationModal();
+                }
+              }}
               variant="secondary"
               isBluff={!hasRequiredCharacter(action)}
             />
@@ -197,6 +234,22 @@ export default function ActionBar({
           setIsWalkThePlankModalOpen(false);
         }}
       />
+
+      {selectedAction && isConfirmationModalOpen && (
+        <ConfirmationModal
+          onCancel={() => {
+            setIsConfirmationModalOpen(false);
+            setSelectedAction(null);
+          }}
+          currentPlayerId={gameState.currentPlayerId}
+          players={gameState.players}
+          onConfirm={confirmAction}
+          isBluff={!hasRequiredCharacter(selectedAction)}
+          action={selectedAction}
+          setTargetPlayerId={setTargetPlayerId}
+          targetPlayerId={targetPlayerId}
+        />
+      )}
     </div>
   );
 }
