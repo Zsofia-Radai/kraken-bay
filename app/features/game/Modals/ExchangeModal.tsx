@@ -2,24 +2,18 @@ import { Card } from "@/app/types/game";
 import RoleCard from "../RoleCard";
 
 type ExchangeModalProps = {
-  isOpen: boolean;
   cards: Card[];
   selectedCardIds: string[];
   selectExchangeCard: (cardId: string) => void;
   onConfirm: () => void;
-  onCancel: () => void;
 };
 
 export default function ExchangeModal({
-  isOpen,
   cards,
   selectedCardIds,
   selectExchangeCard,
   onConfirm,
-  onCancel,
 }: ExchangeModalProps) {
-  if (!isOpen) return null;
-
   const canConfirm = selectedCardIds.length === 2;
 
   return (
@@ -56,14 +50,6 @@ export default function ExchangeModal({
         </div>
 
         <footer className="mt-8 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg bg-slate-800 px-4 py-2 text-slate-200 hover:bg-slate-700 cursor-pointer"
-          >
-            Cancel
-          </button>
-
           <button
             type="button"
             onClick={onConfirm}

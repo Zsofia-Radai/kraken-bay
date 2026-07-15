@@ -1,30 +1,31 @@
 import { cn } from "@/app/lib/utils";
 import { PendingAction, PlayerData } from "@/app/types/game";
-import { IconWallet } from "@tabler/icons-react";
-import Image from "next/image";
 import ChallengeTimer from "../Actions/ChallengeTimer";
 import ReactionsBar from "../Actions/ReactionsBar";
 import RoleCard from "../RoleCard";
+import Profile from "./Profile";
 
 type PlayerProps = {
-  playerData: PlayerData;
+  player: PlayerData;
   active?: boolean;
   currentPlayerId: string;
   pendingAction?: PendingAction | null;
   responderPlayerId?: string;
   allowAction: () => void;
+  challengeAction: (challengerId: string) => void;
 };
 
 export default function Player({
-  playerData: { profile: player, coins, cards },
+  player,
   currentPlayerId,
   pendingAction,
   responderPlayerId,
   allowAction,
+  challengeAction,
 }: PlayerProps) {
-  const activePlayer = currentPlayerId === player.id;
+  const activePlayer = currentPlayerId === player.profile.id;
   const isResponderPlayer =
-    (pendingAction?.targetPlayerId ?? responderPlayerId) === player.id;
+    (pendingAction?.targetPlayerId ?? responderPlayerId) === player.profile.id;
 
   return (
     <div
@@ -35,28 +36,10 @@ export default function Player({
           : "border-cyan-400/30 bg-teal-900/60",
       )}
     >
-      <div className="flex items-center gap-4">
-        <div className="h-20 w-20 relative rounded-full border-4 border-yellow-400 bg-slate-200">
-          <Image
-            src={player.avatar}
-            alt={player.name}
-            fill
-            sizes="80px"
-            className="cover"
-          />
-        </div>
-
-        <div className="flex-1">
-          <h2 className="text-xl font-bold">{player.name}</h2>
-          <div className="mt-1 flex items-center gap-2">
-            <IconWallet className="h-5 w-5 text-cyan-200" />
-            <p className="text-cyan-100 font-semibold">{coins} coins</p>
-          </div>
-        </div>
-      </div>
+      <Profile player={player} />
 
       <div className="mt-4 flex justify-left gap-4">
-        {cards.map((card) => (
+        {player.cards.map((card) => (
           <RoleCard key={card.id} card={card} size="small" />
         ))}
       </div>
@@ -66,6 +49,7 @@ export default function Player({
           <ReactionsBar
             isResponderPlayer={isResponderPlayer}
             onAllow={allowAction}
+            onChallenge={() => challengeAction(player.profile.id)}
           />
           <ChallengeTimer key={pendingAction.id} onTimeout={allowAction} />
         </>

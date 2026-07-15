@@ -6,7 +6,7 @@ type ChallengeTimerProps = {
 };
 
 export default function ChallengeTimer({
-  duration = 6,
+  duration = 30,
   onTimeout,
 }: ChallengeTimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration);

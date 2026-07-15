@@ -1,37 +1,41 @@
 import { PlayerData } from "@/app/types/game";
-import TargetModal from "./TargetModal";
-import { IconTarget } from "@tabler/icons-react";
+import { useState } from "react";
+import Profile from "../Players/Profile";
+import InfluenceCardSelector from "./InfluenceCardSelector";
 
 type AssassinateModalProps = {
   onConfirm: (targetCardId: string) => void;
-  isOpen: boolean;
-  players: PlayerData[];
-  currentPlayerId: string;
-  closeModal: () => void;
+  player: PlayerData;
 };
 
 export default function AssassinateModal({
   onConfirm,
-  isOpen,
-  players,
-  currentPlayerId,
-  closeModal,
+  player,
 }: AssassinateModalProps) {
-  if (!isOpen) return null;
-  const settings = {
-    title: "Select assassination target",
-    description: "Select a card to reveal.",
-    icon: IconTarget,
-  };
-
+  const [targetCardId, setTargetCardId] = useState<string>(player.cards[0].id);
   return (
-    <TargetModal
-      onConfirm={onConfirm}
-      isOpen={isOpen}
-      players={players}
-      currentPlayerId={currentPlayerId}
-      closeModal={closeModal}
-      settings={settings}
-    />
+    <div className="w-full fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="max-w-3xl min-w-[500px] rounded-2xl border border-cyan-400/30 bg-slate-950 p-10 shadow-2xl">
+        <div className="flex flex-col items-center gap-1 bg-teal-800/70 p-4 rounded-2xl border-2">
+          <Profile player={player} />
+
+          <InfluenceCardSelector
+            cards={player.cards}
+            selectedCardId={targetCardId}
+            onSelectCard={setTargetCardId}
+          />
+        </div>
+
+        <footer className="mt-8 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => onConfirm(targetCardId)}
+            className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer hover:bg-cyan-600"
+          >
+            Confirm
+          </button>
+        </footer>
+      </div>
+    </div>
   );
 }

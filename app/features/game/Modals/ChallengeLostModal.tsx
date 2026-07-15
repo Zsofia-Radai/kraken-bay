@@ -1,0 +1,85 @@
+import { cn } from "@/app/lib/utils";
+import { PlayerData } from "@/app/types/game";
+import { IconSkull } from "@tabler/icons-react";
+import { useState } from "react";
+import RoleCard from "../RoleCard";
+
+type ChallengeLostModalProps = {
+  player: PlayerData;
+  onConfirm: (targetCardId: string) => void;
+};
+
+export default function ChallengeLostModal({
+  player,
+  onConfirm,
+}: ChallengeLostModalProps) {
+  const [targetCardId, setTargetCardId] = useState(player.cards[0].id);
+  return (
+    <div className="w-full fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="max-w-3xl min-w-[500px] rounded-2xl border border-cyan-400/30 bg-slate-950 p-10 shadow-2xl">
+        <header className="mb-6 text-center">
+          <h2 className="text-2xl font-bold text-cyan-100">Challenge lost!</h2>
+          <p className="mt-2 text-sm text-slate-300">
+            <span className="text-cyan-600">{player.profile.id} </span>
+            must reveal an influence.
+          </p>
+        </header>
+        <div className={cn("mt-4 grid grid-cols-2 gap-3")}>
+          {player.cards.map((card) => {
+            const isRevealed = card.revealed;
+            const isSelected = targetCardId === card.id;
+            return (
+              <button
+                onClick={() => setTargetCardId(card.id)}
+                type="button"
+                key={card.id}
+                className={cn(
+                  "relative group",
+                  card.revealed ? "cursor-default" : "cursor-pointer",
+                )}
+                disabled={card.revealed}
+              >
+                <RoleCard
+                  card={card}
+                  size="medium"
+                  selected={targetCardId === card.id}
+                  isVisible={true}
+                />
+
+                <div
+                  className={cn(
+                    "absolute inset-0 flex items-center justify-center transition-all duration-200 ease-out",
+                    isRevealed || isSelected
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100",
+                  )}
+                >
+                  {isRevealed && (
+                    <IconSkull className="h-10 w-10 text-white drop-shadow-lg" />
+                  )}
+
+                  {isRevealed && (
+                    <div className="absolute inset-0 bg-black/35" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <footer className="mt-8 flex justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => onConfirm(targetCardId)}
+            className="
+              rounded-lg bg-cyan-500 px-4 py-2 
+              font-bold text-slate-950 disabled:cursor-not-allowed 
+              disabled:opacity-40 cursor-pointer hover:bg-cyan-600"
+          >
+            Confirm
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}

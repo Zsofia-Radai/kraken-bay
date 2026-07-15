@@ -4,6 +4,7 @@ import {
   actions,
   walkThePlankAction,
 } from "@/app/data/actions";
+import { getNextAlivePlayerId } from "@/app/lib/actionUtils";
 import { playSound, sounds } from "@/app/lib/sounds";
 import { Card, GameState, PlayerData } from "@/app/types/game";
 import { useEffect, useState } from "react";
@@ -16,14 +17,12 @@ import {
   walkThePlank,
 } from "../GameLogic";
 import AssassinateModal from "../Modals/AssassinateModal";
+import ConfirmationModal from "../Modals/ConfirmationModal";
 import ExchangeModal from "../Modals/ExchangeModal";
-import StealModal from "../Modals/StealModal";
 import WalkThePlankModal from "../Modals/WalkThePlankModal";
 import ActionButton from "./ActionButton";
-import ConfirmationModal from "../Modals/ConfirmationModal";
-import { getNextAlivePlayerId } from "@/app/lib/actionUtils";
 
-export default function ActionBar({
+export default function ActionsBar({
   playerData: { cards, coins },
   gameState,
   setGameState,
@@ -32,18 +31,42 @@ export default function ActionBar({
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
 }) {
-  const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
-  const [isStealModalOpen, setIsStealModalOpen] = useState(false);
-  const [isAssassinateModalOpen, setIsAssassinateModalOpen] = useState(false);
   const [isWalkThePlankModalOpen, setIsWalkThePlankModalOpen] = useState(false);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
-  const [drawnExchangeCards, setDrawnExchangeCards] = useState<Card[]>([]);
-  const [exchangeCards, setExchangeCards] = useState<Card[]>([]);
-  const [targetPlayerId, setTargetPlayerId] = useState<string | null>(null);
+  const [selectedTargetPlayerId, setSelectedTargetPlayerId] = useState<
+    string | null
+  >(null);
   const [selectedExchangeCardIds, setSelectedExchangeCardIds] = useState<
     string[]
   >([]);
+  const isAssassinateAllowed =
+    gameState.pendingAction?.actionId === "assassinate" &&
+    gameState.pendingAction.phase === "allowed";
+
+  const isExchangeAllowed =
+    gameState.pendingAction?.actionId === "exchange" &&
+    gameState.pendingAction.phase === "allowed";
+
+  const currentPlayer = gameState.players.find(
+    (player) => player.profile.id === gameState.currentPlayerId,
+  );
+
+  const drawnExchangeCards = isExchangeAllowed
+    ? gameState.deck.slice(0, 2)
+    : [];
+
+  const exchangeCards =
+    isExchangeAllowed && currentPlayer
+      ? [...currentPlayer.cards, ...drawnExchangeCards]
+      : [];
+
+  const targetPlayer = gameState.players.find(
+    (player) => player.profile.id === gameState.pendingAction?.targetPlayerId,
+  );
+  const opponents = gameState.players.filter(
+    (player) => player.profile.id !== gameState.currentPlayerId,
+  );
 
   const hasRequiredCharacter = (action: Action) => {
     if (!action.requiredCharacter) return true;
@@ -57,16 +80,15 @@ export default function ActionBar({
     setGameState(income);
   };
 
-  const handleTax = () => {
-    playSound(sounds.coin);
-    setGameState(tax);
-  };
+  const confirmAssassinate = (targetCardId: string) => {
+    setGameState((prev) => {
+      const newState = assassinate(prev, targetCardId);
 
-  const confirmSteal = () => {
-    if (!targetPlayerId) return;
-    setGameState((prev) => steal(prev, targetPlayerId));
-    setTargetPlayerId(null);
-    setIsStealModalOpen(false);
+      return {
+        ...newState,
+        pendingAction: null,
+      };
+    });
   };
 
   const confirmExchange = () => {
@@ -74,33 +96,16 @@ export default function ActionBar({
       selectedExchangeCardIds.includes(card.id),
     );
 
-    setGameState((prev) => exchange(prev, selectedCards, drawnExchangeCards));
+    setGameState((prev) => {
+      const exchangedState = exchange(prev, selectedCards, drawnExchangeCards);
 
-    setIsExchangeModalOpen(false);
-  };
+      return {
+        ...exchangedState,
+        pendingAction: null,
+      };
+    });
 
-  const openStealModal = () => {
-    setIsStealModalOpen(true);
-  };
-
-  const openAssassinateModal = () => {
-    setIsAssassinateModalOpen(true);
-  };
-
-  const openExchangeModal = () => {
-    const currentPlayer = gameState.players.find(
-      (player) => player.profile.id === gameState.currentPlayerId,
-    );
-
-    if (!currentPlayer) return;
-
-    const drawnCards = gameState.deck.slice(0, 2);
-
-    setDrawnExchangeCards(drawnCards);
-    setExchangeCards([...currentPlayer.cards, ...drawnCards]);
-
-    setSelectedExchangeCardIds(currentPlayer.cards.map((card) => card.id));
-    setIsExchangeModalOpen(true);
+    setSelectedExchangeCardIds([]);
   };
 
   const selectExhangeCard = (cardId: string) => {
@@ -130,7 +135,7 @@ export default function ActionBar({
         id: crypto.randomUUID(),
         actionId: selectedAction.id,
         playerId: prev.currentPlayerId,
-        targetPlayerId: targetPlayerId ?? undefined,
+        targetPlayerId: selectedTargetPlayerId ?? undefined,
         responderPlayerId: getNextAlivePlayerId(
           prev.players,
           prev.currentPlayerId,
@@ -141,15 +146,7 @@ export default function ActionBar({
 
     setIsConfirmationModalOpen(false);
     setSelectedAction(null);
-    setTargetPlayerId(null);
-  };
-
-  const actionHandlers: Partial<Record<ActionId, () => void>> = {
-    income: handleIncome,
-    tax: handleTax,
-    exchange: openExchangeModal,
-    steal: openStealModal,
-    assassinate: openAssassinateModal,
+    setSelectedTargetPlayerId(null);
   };
 
   return (
@@ -184,56 +181,35 @@ export default function ActionBar({
         })}
       </div>
 
-      <ExchangeModal
-        isOpen={isExchangeModalOpen}
-        cards={exchangeCards}
-        selectedCardIds={selectedExchangeCardIds}
-        selectExchangeCard={selectExhangeCard}
-        onConfirm={() => confirmExchange()}
-        onCancel={() => setIsExchangeModalOpen(false)}
-      />
+      {isExchangeAllowed && exchangeCards.length === 4 && (
+        <ExchangeModal
+          cards={exchangeCards}
+          selectedCardIds={selectedExchangeCardIds}
+          selectExchangeCard={selectExhangeCard}
+          onConfirm={() => confirmExchange()}
+        />
+      )}
 
-      <StealModal
-        isOpen={isStealModalOpen}
-        players={gameState.players}
-        currentPlayerId={gameState.currentPlayerId}
-        selectTargetPlayer={(targetPlayerId) =>
-          setTargetPlayerId(targetPlayerId)
-        }
-        targetPlayerId={targetPlayerId}
-        onConfirm={() => confirmSteal()}
-        onCancel={() => {
-          setTargetPlayerId(null);
-          setIsStealModalOpen(false);
-        }}
-      />
+      {targetPlayer && isAssassinateAllowed && (
+        <AssassinateModal
+          player={targetPlayer}
+          onConfirm={(targetCardId) => confirmAssassinate(targetCardId)}
+        />
+      )}
 
-      <AssassinateModal
-        isOpen={isAssassinateModalOpen}
-        players={gameState.players}
-        currentPlayerId={gameState.currentPlayerId}
-        onConfirm={(targetCardId) => {
-          setGameState((prev) => assassinate(prev, targetCardId));
-          setIsAssassinateModalOpen(false);
-        }}
-        closeModal={() => {
-          setIsAssassinateModalOpen(false);
-        }}
-      />
-
-      <WalkThePlankModal
-        isOpen={isWalkThePlankModalOpen}
-        players={gameState.players}
-        currentPlayerId={gameState.currentPlayerId}
-        onConfirm={(targetCardId) => {
-          setGameState((prev) => walkThePlank(prev, targetCardId));
-          playSound(sounds.flip);
-          setIsWalkThePlankModalOpen(false);
-        }}
-        closeModal={() => {
-          setIsWalkThePlankModalOpen(false);
-        }}
-      />
+      {isWalkThePlankModalOpen && (
+        <WalkThePlankModal
+          players={opponents}
+          onConfirm={(targetCardId) => {
+            setGameState((prev) => walkThePlank(prev, targetCardId));
+            playSound(sounds.flip);
+            setIsWalkThePlankModalOpen(false);
+          }}
+          onCancel={() => {
+            setIsWalkThePlankModalOpen(false);
+          }}
+        />
+      )}
 
       {selectedAction && isConfirmationModalOpen && (
         <ConfirmationModal
@@ -246,8 +222,8 @@ export default function ActionBar({
           onConfirm={confirmAction}
           isBluff={!hasRequiredCharacter(selectedAction)}
           action={selectedAction}
-          setTargetPlayerId={setTargetPlayerId}
-          targetPlayerId={targetPlayerId}
+          setTargetPlayerId={setSelectedTargetPlayerId}
+          targetPlayerId={selectedTargetPlayerId}
         />
       )}
     </div>

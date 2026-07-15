@@ -1,7 +1,8 @@
 import { Action } from "@/app/data/actions";
+import { cn } from "@/app/lib/utils";
 import { PlayerData } from "@/app/types/game";
 import { IconAlertHexagon, IconAlertTriangle } from "@tabler/icons-react";
-import StealTargets from "./StealTargets";
+import TargetSelector from "./TargetSelector";
 
 type ModalProps = {
   action: Action;
@@ -25,10 +26,18 @@ export default function ConfirmationModal({
   setTargetPlayerId,
 }: ModalProps) {
   const Icon = action.icon;
+  const requiresTarget = action.id === "steal" || action.id === "assassinate";
+  const isConfirmDisabled = requiresTarget && !targetPlayerId;
 
   return (
     <div className="w-full fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-w-3xl min-w-[500px] rounded-2xl border border-cyan-400/30 bg-slate-950 p-10 shadow-2xl">
+      <div
+        className={cn(
+          "w-full rounded-2xl border border-cyan-400/30",
+          "bg-slate-950 p-10 shadow-2xl",
+          requiresTarget ? "max-w-[800px]" : "max-w-[500px]",
+        )}
+      >
         <header className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-cyan-100 relative align-center">
             <div>Confirm your action</div>
@@ -46,10 +55,19 @@ export default function ConfirmationModal({
         </header>
 
         {action.id === "steal" && (
-          <StealTargets
+          <TargetSelector
             players={players}
             targetPlayerId={targetPlayerId}
-            selectTargetPlayer={setTargetPlayerId}
+            onSelectTarget={setTargetPlayerId}
+            currentPlayerId={currentPlayerId}
+          />
+        )}
+
+        {action.id === "assassinate" && (
+          <TargetSelector
+            players={players}
+            targetPlayerId={targetPlayerId}
+            onSelectTarget={setTargetPlayerId}
             currentPlayerId={currentPlayerId}
           />
         )}
@@ -66,6 +84,7 @@ export default function ConfirmationModal({
           <button
             type="button"
             onClick={onConfirm}
+            disabled={isConfirmDisabled}
             className="
               rounded-lg bg-cyan-500 px-4 py-2 
               font-bold text-slate-950 disabled:cursor-not-allowed 

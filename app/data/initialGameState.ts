@@ -78,6 +78,7 @@ export function createInitialGameState(): GameState {
     log: ["Game started. Monkey's turn."],
     status: "Take your action",
     pendingAction: null,
+    pendingChallenge: null,
     actionHistory: [],
   };
 }

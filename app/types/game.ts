@@ -44,6 +44,12 @@ export type PendingAction = {
   phase: "awaiting" | "blocked" | "challenged" | "allowed";
 };
 
+type PendingChallenge = {
+  challengerId: string;
+  loserId: string;
+  wasClaimValid: boolean;
+};
+
 export type ActionHistoryEntry = {
   id: string;
   playerId: string;
@@ -60,5 +66,6 @@ export type GameState = {
   discardPile: Card[];
   status: string;
   pendingAction: PendingAction | null;
+  pendingChallenge: PendingChallenge | null;
   actionHistory: ActionHistoryEntry[];
 };

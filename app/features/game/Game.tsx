@@ -6,13 +6,18 @@ import { useState } from "react";
 import ActionHistory from "./Actions/ActionHistory";
 import ActivePlayer from "./Players/ActivePlayer";
 import Player from "./Players/Player";
-import ActionBar from "./Actions/ActionsBar";
+import ActionsBar from "./Actions/ActionsBar";
 import { IconCards } from "@tabler/icons-react";
-import { steal, tax } from "./GameLogic";
+import { revealInfluence, steal, tax } from "./GameLogic";
+import { actions } from "@/app/data/actions";
+import ChallengeLostModal from "./Modals/ChallengeLostModal";
 
 export default function Game() {
   const [gameState, setGameState] = useState(createInitialGameState);
   const players = gameState.players;
+  const challengeLoser = players.find(
+    (player) => player.profile.id === gameState.pendingChallenge?.loserId,
+  );
 
   const activePlayer = gameState.players.find(
     (player) => player.profile.id === gameState.currentPlayerId,
@@ -26,7 +31,54 @@ export default function Game() {
     setGameState((prev) => resolvePendingAction(prev));
   };
 
-  function resolvePendingAction(state: GameState): GameState {
+  const handleChallenge = (challengerId: string) => {
+    setGameState((prev) => {
+      const pendingAction = prev.pendingAction;
+
+      if (!pendingAction) {
+        return prev;
+      }
+
+      const claimedAction = actions[pendingAction.actionId];
+
+      if (!("requiredCharacter" in claimedAction)) {
+        return prev;
+      }
+
+      const requiredCharacter = claimedAction.requiredCharacter;
+
+      const claimingPlayer = prev.players.find(
+        (player) => player.profile.id === pendingAction.playerId,
+      );
+
+      if (!claimingPlayer) {
+        return prev;
+      }
+
+      const hasClaimedCharacter = claimingPlayer.cards.some(
+        (card) => !card.revealed && card.characterId === requiredCharacter,
+      );
+
+      const loserId = hasClaimedCharacter
+        ? challengerId
+        : claimingPlayer.profile.id;
+
+      return {
+        ...prev,
+        pendingAction: {
+          ...pendingAction,
+          phase: "challenged",
+        },
+        pendingChallenge: {
+          challengerId,
+          loserId,
+          wasClaimValid: hasClaimedCharacter,
+        },
+      };
+    });
+  };
+
+  const resolvePendingAction = (state: GameState): GameState => {
     const pendingAction = state.pendingAction;
 
     if (!pendingAction) {
@@ -47,6 +99,24 @@ export default function Game() {
         resolvedState = steal(state, pendingAction.targetPlayerId);
         break;
 
+      case "exchange":
+        return {
+          ...state,
+          pendingAction: {
+            ...pendingAction,
+            phase: "allowed",
+          },
+        };
+
+      case "assassinate":
+        return {
+          ...state,
+          pendingAction: {
+            ...pendingAction,
+            phase: "allowed",
+          },
+        };
+
       default:
         return state;
     }
@@ -54,6 +124,20 @@ export default function Game() {
     return {
       ...resolvedState,
       pendingAction: null,
+    };
+  };
+
+  const confirmReveal = (targetCardId: string) => {
+    setGameState((prev) => {
+      const revealedState = revealInfluence(prev, targetCardId);
+      return clearPendingChallenge(revealedState);
+    });
+  };
+
+  function clearPendingChallenge(state: GameState): GameState {
+    return {
+      ...state,
+      pendingChallenge: null,
     };
   }
 
@@ -64,11 +148,12 @@ export default function Game() {
           {players.map((playerData: PlayerData) => (
             <Player
               currentPlayerId={gameState.currentPlayerId}
-              playerData={playerData}
+              player={playerData}
               key={playerData.profile.id}
               pendingAction={gameState.pendingAction}
               responderPlayerId={gameState.pendingAction?.responderPlayerId}
               allowAction={handleAllow}
+              challengeAction={handleChallenge}
             />
           ))}
         </section>
@@ -99,12 +184,19 @@ export default function Game() {
           </section>
 
           <section className="mt-12 flex justify-center">
-            <ActionBar
+            <ActionsBar
               gameState={gameState}
               setGameState={setGameState}
               playerData={activePlayer}
             />
           </section>
+
+          {challengeLoser && (
+            <ChallengeLostModal
+              player={challengeLoser}
+              onConfirm={confirmReveal}
+            />
+          )}
         </div>
       </div>
     </main>

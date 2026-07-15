@@ -65,31 +65,33 @@ export function steal(state: GameState, selectedPlayerId: string): GameState {
 }
 
 export function assassinate(state: GameState, targetCardId: string): GameState {
-  return revealInfluence(state, targetCardId, ASSASSINATION_PRICE);
+  const paidState = spendCoins(
+    state,
+    state.currentPlayerId,
+    ASSASSINATION_PRICE,
+  );
+  return revealInfluence(paidState, targetCardId);
 }
 
 export function walkThePlank(
   state: GameState,
   targetCardId: string,
 ): GameState {
-  return revealInfluence(state, targetCardId, WALK_tHE_PLANK_PRICE);
+  const paidState = spendCoins(
+    state,
+    state.currentPlayerId,
+    WALK_tHE_PLANK_PRICE,
+  );
+  return revealInfluence(paidState, targetCardId);
 }
 
-function revealInfluence(
+export function revealInfluence(
   state: GameState,
   targetCardId: string,
-  price: number,
 ): GameState {
   return {
     ...state,
     players: state.players.map((player) => {
-      if (player.profile.id === state.currentPlayerId) {
-        return {
-          ...player,
-          coins: Math.max(0, player.coins - price),
-        };
-      }
-
       const updatedCards = player.cards.map((card) =>
         card.id === targetCardId ? { ...card, revealed: true } : card,
       );
@@ -100,6 +102,24 @@ function revealInfluence(
         isAlive: updatedCards.some((card) => !card.revealed),
       };
     }),
+  };
+}
+
+function spendCoins(
+  state: GameState,
+  playerId: string,
+  amount: number,
+): GameState {
+  return {
+    ...state,
+    players: state.players.map((player) =>
+      player.profile.id === playerId
+        ? {
+            ...player,
+            coins: Math.max(0, player.coins - amount),
+          }
+        : player,
+    ),
   };
 }
 

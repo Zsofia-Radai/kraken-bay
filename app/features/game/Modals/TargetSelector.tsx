@@ -1,37 +1,37 @@
 import { cn } from "@/app/lib/utils";
 import { PlayerData } from "@/app/types/game";
-import { IconWallet } from "@tabler/icons-react";
+import { IconSkull, IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
+import RoleCard from "../RoleCard";
 
-type StealTargetProps = {
+type TargetSelectorProps = {
   players: PlayerData[];
   currentPlayerId: string;
-  selectTargetPlayer: (id: string) => void;
+  onSelectTarget: (playerId: string) => void;
   targetPlayerId?: string | null;
 };
 
-export default function StealTargets({
+export default function TargetSelector({
   players,
   currentPlayerId,
-  selectTargetPlayer,
+  onSelectTarget,
   targetPlayerId,
-}: StealTargetProps) {
+}: TargetSelectorProps) {
   const opponents = players.filter(
     (player) => player.profile.id !== currentPlayerId,
   );
-
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-3">
       {opponents.map((player) => {
         const profile = player.profile;
         return (
           <button
             type="button"
             key={profile.id}
-            disabled={player.coins < 1}
             className={cn(
-              "items-center gap-4 bg-teal-800/70 p-4 rounded-2xl border-2",
-              "text-center cursor-pointer hover:bg-cyan-700",
+              "items-center gap-1 bg-teal-800/70 p-4 rounded-2xl border-2",
+              "flex flex-col items-center text-center",
+              "text-center cursor-pointer",
               "disabled:cursor-not-allowed",
               "disabled:bg-gray-600",
               "disabled:border-gray-500",
@@ -42,7 +42,9 @@ export default function StealTargets({
                 ? "bg-cyan-700 border-slate-100 border-2"
                 : "",
             )}
-            onClick={() => selectTargetPlayer(profile.id)}
+            onClick={() => {
+              onSelectTarget(profile.id);
+            }}
           >
             <div className="h-24 w-24 relative rounded-full border-4 border-yellow-400 bg-slate-200">
               <Image
@@ -62,6 +64,34 @@ export default function StealTargets({
                   {player.coins} coins
                 </p>
               </div>
+            </div>
+
+            <div className={cn("mt-4 flex justify-center gap-2")}>
+              {player.cards.map((card) => {
+                const isRevealed = card.revealed;
+                return (
+                  <div key={card.id} className="relative">
+                    <RoleCard card={card} size="small" />
+
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-0 flex items-center justify-center transition-all duration-200 ease-out",
+                        isRevealed
+                          ? "opacity-100 scale-100"
+                          : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100",
+                      )}
+                    >
+                      {isRevealed && (
+                        <IconSkull className="h-10 w-10 text-white drop-shadow-lg" />
+                      )}
+
+                      {isRevealed && (
+                        <div className="absolute inset-0 bg-black/35" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </button>
         );
