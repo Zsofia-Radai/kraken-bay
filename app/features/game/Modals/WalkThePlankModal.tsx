@@ -1,9 +1,8 @@
 import { cn } from "@/app/lib/utils";
 import { PlayerData } from "@/app/types/game";
-import { IconSkull, IconWallet } from "@tabler/icons-react";
+import { IconWallet } from "@tabler/icons-react";
 import Image from "next/image";
 import { useState } from "react";
-import RoleCard from "../RoleCard";
 import InfluenceCardSelector from "./InfluenceCardSelector";
 
 type WalkThePlankModalProps = {
@@ -84,7 +83,12 @@ export default function WalkThePlankModal({
               if (!targetCardId) return;
               onConfirm(targetCardId);
             }}
-            className="rounded-lg bg-cyan-500 px-4 py-2 font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer hover:bg-cyan-600"
+            className="
+              rounded-lg bg-cyan-500 
+              px-4 py-2 font-bold text-slate-950 
+              disabled:cursor-not-allowed disabled:opacity-40 
+              cursor-pointer hover:bg-cyan-600
+            "
           >
             Confirm
           </button>

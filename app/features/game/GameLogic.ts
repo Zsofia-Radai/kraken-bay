@@ -1,3 +1,4 @@
+import { actions } from "@/app/data/actions";
 import { shuffle } from "@/app/data/initialGameState";
 import { Card, GameState, PlayerData } from "@/app/types/game";
 
@@ -146,5 +147,58 @@ function removeCoinsFromPlayer(
         ? { ...player, coins: player.coins - amount }
         : player,
     ),
+  };
+}
+
+export function replaceClaimedCharacter(state: GameState): GameState {
+  const pendingAction = state.pendingAction;
+
+  if (!pendingAction) {
+    return state;
+  }
+
+  const claimedAction = actions[pendingAction.actionId];
+
+  if (!("requiredCharacter" in claimedAction)) {
+    return state;
+  }
+
+  const claimingPlayer = state.players.find(
+    (player) => player.profile.id === pendingAction.playerId,
+  );
+
+  if (!claimingPlayer) {
+    return state;
+  }
+
+  const claimedCard = claimingPlayer.cards.find(
+    (card) =>
+      !card.revealed && card.characterId === claimedAction.requiredCharacter,
+  );
+
+  if (!claimedCard) {
+    return state;
+  }
+
+  const shuffledDeck = shuffle([...state.deck, claimedCard]);
+  const replacementCard = shuffledDeck[0];
+
+  if (!replacementCard) {
+    return state;
+  }
+
+  return {
+    ...state,
+    players: state.players.map((player) =>
+      player.profile.id === claimingPlayer.profile.id
+        ? {
+            ...player,
+            cards: player.cards.map((card) =>
+              card.id === claimedCard.id ? replacementCard : card,
+            ),
+          }
+        : player,
+    ),
+    deck: shuffledDeck.slice(1),
   };
 }

@@ -1,16 +1,21 @@
 "use client";
 
-import { createInitialGameState } from "@/app/data/initialGameState";
-import { GameState, PlayerData } from "@/app/types/game";
+import { actions } from "@/app/data/actions";
+import { createInitialGameState, shuffle } from "@/app/data/initialGameState";
+import { GameState, PendingChallenge, PlayerData } from "@/app/types/game";
+import { IconCards } from "@tabler/icons-react";
 import { useState } from "react";
 import ActionHistory from "./Actions/ActionHistory";
+import ActionsBar from "./Actions/ActionsBar";
+import {
+  replaceClaimedCharacter,
+  revealInfluence,
+  steal,
+  tax,
+} from "./GameLogic";
+import ChallengeLostModal from "./Modals/ChallengeLostModal";
 import ActivePlayer from "./Players/ActivePlayer";
 import Player from "./Players/Player";
-import ActionsBar from "./Actions/ActionsBar";
-import { IconCards } from "@tabler/icons-react";
-import { revealInfluence, steal, tax } from "./GameLogic";
-import { actions } from "@/app/data/actions";
-import ChallengeLostModal from "./Modals/ChallengeLostModal";
 
 export default function Game() {
   const [gameState, setGameState] = useState(createInitialGameState);
@@ -28,118 +33,124 @@ export default function Game() {
   }
 
   const handleAllow = () => {
-    setGameState((prev) => resolvePendingAction(prev));
+    setGameState((prev) => advancePendingAction(prev));
+  };
+
+  const completeAction = (state: GameState): GameState => ({
+    ...state,
+    pendingAction: null,
+  });
+
+  const allowPendingAction = (state: GameState): GameState => {
+    if (!state.pendingAction) return state;
+
+    return {
+      ...state,
+      pendingAction: {
+        ...state.pendingAction,
+        phase: "allowed",
+      },
+    };
   };
 
   const handleChallenge = (challengerId: string) => {
     setGameState((prev) => {
-      const pendingAction = prev.pendingAction;
+      const pendingChallenge = createPendingChallenge(prev, challengerId);
 
-      if (!pendingAction) {
+      if (!pendingChallenge || !prev.pendingAction) {
         return prev;
       }
-
-      const claimedAction = actions[pendingAction.actionId];
-
-      if (!("requiredCharacter" in claimedAction)) {
-        return prev;
-      }
-
-      const requiredCharacter = claimedAction.requiredCharacter;
-
-      const claimingPlayer = prev.players.find(
-        (player) => player.profile.id === pendingAction.playerId,
-      );
-
-      if (!claimingPlayer) {
-        return prev;
-      }
-
-      const hasClaimedCharacter = claimingPlayer.cards.some(
-        (card) => !card.revealed && card.characterId === requiredCharacter,
-      );
-
-      const loserId = hasClaimedCharacter
-        ? challengerId
-        : claimingPlayer.profile.id;
 
       return {
         ...prev,
         pendingAction: {
-          ...pendingAction,
+          ...prev.pendingAction,
           phase: "challenged",
         },
-        pendingChallenge: {
-          challengerId,
-          loserId,
-          wasClaimValid: hasClaimedCharacter,
-        },
+        pendingChallenge,
       };
     });
   };
 
-  const resolvePendingAction = (state: GameState): GameState => {
+  function createPendingChallenge(
+    state: GameState,
+    challengerId: string,
+  ): PendingChallenge | null {
     const pendingAction = state.pendingAction;
 
-    if (!pendingAction) {
-      return state;
-    }
+    if (!pendingAction) return null;
 
-    let resolvedState: GameState;
+    const claimedAction = actions[pendingAction.actionId];
+
+    if (!("requiredCharacter" in claimedAction)) return null;
+
+    const claimingPlayer = state.players.find(
+      (player) => player.profile.id === pendingAction.playerId,
+    );
+
+    if (!claimingPlayer) return null;
+
+    const wasClaimValid = claimingPlayer.cards.some(
+      (card) =>
+        !card.revealed && card.characterId === claimedAction.requiredCharacter,
+    );
+
+    return {
+      challengerId,
+      loserId: wasClaimValid ? challengerId : pendingAction.playerId,
+      wasClaimValid,
+    };
+  }
+
+  const advancePendingAction = (state: GameState): GameState => {
+    const pendingAction = state.pendingAction;
+
+    if (!pendingAction) return state;
 
     switch (pendingAction.actionId) {
       case "tax":
-        resolvedState = tax(state);
-        break;
+        return completeAction(tax(state));
 
       case "steal":
-        if (!pendingAction.targetPlayerId) {
-          return state;
-        }
-        resolvedState = steal(state, pendingAction.targetPlayerId);
-        break;
+        return pendingAction.targetPlayerId
+          ? completeAction(steal(state, pendingAction.targetPlayerId))
+          : state;
 
       case "exchange":
-        return {
-          ...state,
-          pendingAction: {
-            ...pendingAction,
-            phase: "allowed",
-          },
-        };
-
       case "assassinate":
-        return {
-          ...state,
-          pendingAction: {
-            ...pendingAction,
-            phase: "allowed",
-          },
-        };
+        return allowPendingAction(state);
 
       default:
         return state;
     }
-
-    return {
-      ...resolvedState,
-      pendingAction: null,
-    };
   };
 
   const confirmReveal = (targetCardId: string) => {
     setGameState((prev) => {
+      const pendingChallenge = prev.pendingChallenge;
+
+      if (!pendingChallenge) {
+        return prev;
+      }
+
       const revealedState = revealInfluence(prev, targetCardId);
-      return clearPendingChallenge(revealedState);
+
+      if (!pendingChallenge.wasClaimValid) {
+        return {
+          ...revealedState,
+          pendingChallenge: null,
+          pendingAction: null,
+        };
+      }
+
+      const replacedState = replaceClaimedCharacter(revealedState);
+
+      return advancePendingAction({
+        ...replacedState,
+        pendingChallenge: null,
+      });
     });
   };
-
-  function clearPendingChallenge(state: GameState): GameState {
-    return {
-      ...state,
-      pendingChallenge: null,
-    };
-  }
 
   return (
     <main className="min-h-screen bg-slate-950 flex justify-center">

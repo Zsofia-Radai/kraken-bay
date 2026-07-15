@@ -44,7 +44,7 @@ export type PendingAction = {
   phase: "awaiting" | "blocked" | "challenged" | "allowed";
 };
 
-type PendingChallenge = {
+export type PendingChallenge = {
   challengerId: string;
   loserId: string;
   wasClaimValid: boolean;
