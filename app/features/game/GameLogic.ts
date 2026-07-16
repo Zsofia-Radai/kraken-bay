@@ -106,6 +106,29 @@ export function revealInfluence(
   };
 }
 
+export function revealAllInfluences(
+  state: GameState,
+  playerId: string,
+): GameState {
+  return {
+    ...state,
+    players: state.players.map((player) => {
+      if (player.profile.id !== playerId) {
+        return player;
+      }
+
+      return {
+        ...player,
+        cards: player.cards.map((card) => ({
+          ...card,
+          revealed: true,
+        })),
+        isAlive: false,
+      };
+    }),
+  };
+}
+
 function spendCoins(
   state: GameState,
   playerId: string,

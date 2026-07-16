@@ -41,7 +41,7 @@ export type PendingAction = {
   playerId: string;
   targetPlayerId?: string;
   responderPlayerId?: string;
-  phase: "awaiting" | "blocked" | "challenged" | "allowed";
+  phase: "awaiting" | "blocked" | "challenged" | "allowed" | "fatal";
 };
 
 export type PendingChallenge = {

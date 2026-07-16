@@ -1,0 +1,28 @@
+.eliminationCross {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  opacity: 0;
+  color: #dc2626;
+  transform: scale(0.5);
+  pointer-events: none;
+
+  animation: eliminationCross 600ms ease-out forwards;
+}
+
+@keyframes eliminationCross {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

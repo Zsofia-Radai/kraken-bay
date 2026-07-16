@@ -1,7 +1,7 @@
 "use client";
 
 import { actions } from "@/app/data/actions";
-import { createInitialGameState, shuffle } from "@/app/data/initialGameState";
+import { createInitialGameState } from "@/app/data/initialGameState";
 import { GameState, PendingChallenge, PlayerData } from "@/app/types/game";
 import { IconCards } from "@tabler/icons-react";
 import { useState } from "react";
@@ -20,6 +20,14 @@ import Player from "./Players/Player";
 export default function Game() {
   const [gameState, setGameState] = useState(createInitialGameState);
   const players = gameState.players;
+  const pendingChallenge = gameState.pendingChallenge;
+  const pendingAction = gameState.pendingAction;
+
+  const isFatalAssassinationChallenge =
+    pendingAction?.actionId === "assassinate" &&
+    pendingChallenge?.wasClaimValid &&
+    pendingChallenge.challengerId === pendingAction.targetPlayerId;
+
   const challengeLoser = players.find(
     (player) => player.profile.id === gameState.pendingChallenge?.loserId,
   );
@@ -128,27 +136,45 @@ export default function Game() {
   const confirmReveal = (targetCardId: string) => {
     setGameState((prev) => {
       const pendingChallenge = prev.pendingChallenge;
+      const pendingAction = prev.pendingAction;
 
-      if (!pendingChallenge) {
+      if (!pendingChallenge || !pendingAction) {
         return prev;
       }
 
       const revealedState = revealInfluence(prev, targetCardId);
 
-      if (!pendingChallenge.wasClaimValid) {
+      const stateAfterChallenge = pendingChallenge.wasClaimValid
+        ? replaceClaimedCharacter(revealedState)
+        : revealedState;
+
+      const isFatalAssassinationChallenge =
+        prev.pendingAction?.actionId === "assassinate" &&
+        pendingChallenge.wasClaimValid &&
+        pendingChallenge.challengerId === prev.pendingAction.targetPlayerId;
+
+      if (isFatalAssassinationChallenge) {
         return {
-          ...revealedState,
-          pendingChallenge: null,
-          pendingAction: null,
+          ...stateAfterChallenge,
+          pendingAction: {
+            ...pendingAction,
+            phase: "fatal",
+          },
         };
       }
 
-      const replacedState = replaceClaimedCharacter(revealedState);
+      const shouldContinueAction = pendingChallenge.wasClaimValid;
 
-      return advancePendingAction({
-        ...replacedState,
+      return {
+        ...stateAfterChallenge,
         pendingChallenge: null,
-      });
+        pendingAction: shouldContinueAction
+          ? {
+              ...pendingAction,
+              phase: "allowed",
+            }
+          : null,
+      };
     });
   };
 
@@ -205,7 +231,10 @@ export default function Game() {
           {challengeLoser && (
             <ChallengeLostModal
               player={challengeLoser}
-              onConfirm={confirmReveal}
+              onReveal={confirmReveal}
+              isFatal={isFatalAssassinationChallenge}
+              gameState={gameState}
+              setGameState={setGameState}
             />
           )}
         </div>

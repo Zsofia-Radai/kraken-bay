@@ -52,6 +52,14 @@ export default function ActionsBar({
     (player) => player.profile.id === gameState.currentPlayerId,
   );
 
+  const revealedCardIds =
+    currentPlayer?.cards
+      .filter((card) => card.revealed)
+      .map((card) => card.id) ?? [];
+
+  const selectableCardCount =
+    currentPlayer?.cards.filter((card) => !card.revealed).length ?? 0;
+
   const drawnExchangeCards = isExchangeAllowed
     ? gameState.deck.slice(0, 2)
     : [];
@@ -92,8 +100,10 @@ export default function ActionsBar({
   };
 
   const confirmExchange = () => {
+    const keptCardIds = [...revealedCardIds, ...selectedExchangeCardIds];
+
     const selectedCards = exchangeCards.filter((card) =>
-      selectedExchangeCardIds.includes(card.id),
+      keptCardIds.includes(card.id),
     );
 
     setGameState((prev) => {
@@ -108,17 +118,21 @@ export default function ActionsBar({
     setSelectedExchangeCardIds([]);
   };
 
-  const selectExhangeCard = (cardId: string) => {
+  const selectExchangeCard = (cardId: string) => {
+    const card = exchangeCards.find((card) => card.id === cardId);
+
+    if (!card || card.revealed) return;
+
     setSelectedExchangeCardIds((prev) => {
       if (prev.includes(cardId)) {
         return prev.filter((id) => id !== cardId);
       }
 
-      if (prev.length < 2) {
+      if (prev.length < selectableCardCount) {
         return [...prev, cardId];
       }
 
-      return [prev[0], cardId];
+      return [...prev.slice(1), cardId];
     });
   };
 
@@ -185,7 +199,7 @@ export default function ActionsBar({
         <ExchangeModal
           cards={exchangeCards}
           selectedCardIds={selectedExchangeCardIds}
-          selectExchangeCard={selectExhangeCard}
+          selectExchangeCard={selectExchangeCard}
           onConfirm={() => confirmExchange()}
         />
       )}

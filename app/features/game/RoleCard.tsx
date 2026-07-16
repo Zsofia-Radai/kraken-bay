@@ -1,7 +1,9 @@
 import { characters } from "@/app/data/characters";
 import { cn } from "@/app/lib/utils";
 import { Card } from "@/app/types/game";
+import { IconLetterX } from "@tabler/icons-react";
 import Image from "next/image";
+import styles from "./RoleCard.module.css";
 
 interface RoleCardProps {
   card: Card;
@@ -9,6 +11,8 @@ interface RoleCardProps {
   priority?: boolean;
   isVisible?: boolean;
   selected?: boolean;
+  isBeingEliminated?: boolean;
+  onEliminationAnimationEnd?: () => void;
 }
 
 export default function RoleCard({
@@ -17,6 +21,8 @@ export default function RoleCard({
   priority,
   isVisible,
   selected,
+  isBeingEliminated,
+  onEliminationAnimationEnd,
 }: RoleCardProps) {
   const sizes = {
     small: "w-24 h-32",
@@ -45,6 +51,19 @@ export default function RoleCard({
         fill
         priority={priority}
       />
+
+      {isBeingEliminated && (
+        <IconLetterX
+          size={250}
+          stroke={2}
+          className={styles.eliminationCross}
+          onAnimationEnd={() => {
+            window.setTimeout(() => {
+              onEliminationAnimationEnd?.();
+            }, 2000);
+          }}
+        />
+      )}
     </div>
   );
 }
